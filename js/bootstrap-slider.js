@@ -92,11 +92,11 @@
 			// Reset classes
 			this.picker.removeClass('slider-horizontal');
 			this.picker.removeClass('slider-vertical');
-            for (var tooltipName in this.tooltipNames) {
+            this.tooltipNames.forEach(function(tooltipName) {
                 this[tooltipName].removeClass('hide');
                 this[tooltipName + '_min'].removeClass('hide');
                 this[tooltipName + '_max'].removeClass('hide');
-            }
+            });
 		}
 
 		this.orientation = this.element.data('slider-orientation')||options.orientation;
@@ -245,7 +245,7 @@
 			});
 		}
 
-        for (var tooltipName in this.tooltipNames) {
+        this.tooltipNames.forEach(function(tooltipName) {
             if(tooltipOptions[tooltipName] === 'hide') {
                 this[tooltipName].addClass('hide');
                 this[tooltipName + '_min'].addClass('hide');
@@ -269,7 +269,7 @@
                     blur: $.proxy(hideTooltip, this)
                 });
             }
-        }
+        });
 
 		this.enabled = options.enabled && 
 						(this.element.data('slider-enabled') === undefined || this.element.data('slider-enabled') === true);
@@ -338,7 +338,7 @@
 			}
 
 			if (this.range) {
-                for (var tooltipName in this.tooltipNames) {
+                this.tooltipNames.forEach(function(tooltipName) {
                     var formater = this.formaters[tooltipName];
                     var separator = this.tooltip_separators[tooltipName];
                     this[tooltipName + 'Inner'].text(
@@ -350,7 +350,7 @@
                     this[tooltipName + 'Inner_max'].text(
                         formater(this.value[1])
                     );
-                }
+                });
                 // TODO: can possibly do in cycle
 				this.tooltip[0].style[this.stylePos] = this.size * (positionPercentages[0] + (positionPercentages[1] - positionPercentages[0])/2)/100 - (this.orientation === 'vertical' ? this.tooltip.outerHeight()/2 : this.tooltip.outerWidth()/2) +'px';
 				this.tooltip_min[0].style[this.stylePos] = this.size * ( (positionPercentages[0])/100) - (this.orientation === 'vertical' ? this.tooltip_min.outerHeight()/2 : this.tooltip_min.outerWidth()/2) +'px';
@@ -361,11 +361,11 @@
 				this.auxTooltip_max[0].style[this.stylePos] = this.size * ( (positionPercentages[1])/100) - (this.orientation === 'vertical' ? this.auxTooltip_max.outerHeight()/2 : this.auxTooltip_max.outerWidth()/2) +'px';
 
 			} else {
-                for (var tooltipName in this.tooltipNames) {
+                this.tooltipNames.forEach(function(tooltipName) {
                     this[tooltipName + 'Inner'].text(
                         this.formaters[tooltipName](this.value[0])
                     );
-                }
+                });
 				this.tooltip[0].style[this.stylePos] = this.size * positionPercentages[0]/100 - (this.orientation === 'vertical' ? this.tooltip.outerHeight()/2 : this.tooltip.outerWidth()/2) +'px';
 				this.auxTooltip[0].style[this.stylePos] = this.size * positionPercentages[0]/100 - (this.orientation === 'vertical' ? this.auxTooltip.outerHeight()/2 : this.auxTooltip.outerWidth()/2) +'px';
 			}
