@@ -125,9 +125,9 @@
 				this.tooltip.addClass('top')[0].style.top = -this.tooltip.outerHeight() - 14 + 'px';
 				this.tooltip_min.addClass('top')[0].style.top = -this.tooltip_min.outerHeight() - 14 + 'px';
 				this.tooltip_max.addClass('top')[0].style.top = -this.tooltip_max.outerHeight() - 14 + 'px';
-				this.auxTooltip.addClass('top')[0].style.top = this.auxTooltip.outerHeight() + 4 + 'px';
-				this.auxTooltip_min.addClass('top')[0].style.top = this.auxTooltip_min.outerHeight() + 4 + 'px';
-				this.auxTooltip_max.addClass('top')[0].style.top = this.auxTooltip_max.outerHeight() + 4 + 'px';
+				this.auxTooltip.addClass('bottom')[0].style.top = this.picker.outerHeight() - 4 + 'px';
+				this.auxTooltip_min.addClass('top')[0].style.top = this.picker.outerHeight() - 4 + 'px';
+				this.auxTooltip_max.addClass('top')[0].style.top = this.picker.outerHeight() - 4 + 'px';
 				break;
 		}
 
@@ -252,7 +252,7 @@
                 slider[tooltipName + '_min'].addClass('hide');
                 slider[tooltipName + '_max'].addClass('hide');
             } else if(tooltipOptions[tooltipName] === 'always') {
-                slider.tooltipShowCallback(tooltipName)();
+                slider.tooltipShowCallback(tooltipName).call(slider);
                 slider['alwaysShow' + slider.capitalizeFirstLetter(tooltipName)] = true;
             } else {
                 var showTooltip = slider.tooltipShowCallback(tooltipName);
@@ -293,7 +293,7 @@
         // tooltip_name in {'tooltip', 'auxTooltip}
 		tooltipShowCallback: function(tooltip_name) {
             return function() {
-                if (this[tooltip_name + '_split'] === false){
+                if (this.tooltip_splits[tooltip_name] === false){
                     this[tooltip_name].addClass('in');
                 } else {
                     this[tooltip_name + '_min'].addClass('in');
