@@ -27,6 +27,7 @@
 	};
 
 	var Slider = function(element, options) {
+        var slider = this;
 		var el = this.element = $(element).hide();
 		var origWidth =  $(element)[0].style.width;
 
@@ -93,9 +94,9 @@
 			this.picker.removeClass('slider-horizontal');
 			this.picker.removeClass('slider-vertical');
             this.tooltipNames.forEach(function(tooltipName) {
-                this[tooltipName].removeClass('hide');
-                this[tooltipName + '_min'].removeClass('hide');
-                this[tooltipName + '_max'].removeClass('hide');
+                slider[tooltipName].removeClass('hide');
+                slider[tooltipName + '_min'].removeClass('hide');
+                slider[tooltipName + '_max'].removeClass('hide');
             });
 		}
 
@@ -247,26 +248,26 @@
 
         this.tooltipNames.forEach(function(tooltipName) {
             if(tooltipOptions[tooltipName] === 'hide') {
-                this[tooltipName].addClass('hide');
-                this[tooltipName + '_min'].addClass('hide');
-                this[tooltipName + '_max'].addClass('hide');
+                slider[tooltipName].addClass('hide');
+                slider[tooltipName + '_min'].addClass('hide');
+                slider[tooltipName + '_max'].addClass('hide');
             } else if(tooltipOptions[tooltipName] === 'always') {
-                this.tooltipShowCallback(tooltipName)();
-                this['alwaysShow' + this.capitalizeFirstLetter(tooltipName)] = true;
+                slider.tooltipShowCallback(tooltipName)();
+                slider['alwaysShow' + slider.capitalizeFirstLetter(tooltipName)] = true;
             } else {
-                var showTooltip = this.tooltipShowCallback(tooltipName);
-                var hideTooltip = this.tooltipHideCallback(tooltipName);
-                this.picker.on({
-                    mouseenter: $.proxy(showTooltip, this),
-                    mouseleave: $.proxy(hideTooltip, this)
+                var showTooltip = slider.tooltipShowCallback(tooltipName);
+                var hideTooltip = slider.tooltipHideCallback(tooltipName);
+                slider.picker.on({
+                    mouseenter: $.proxy(showTooltip, slider),
+                    mouseleave: $.proxy(hideTooltip, slider)
                 });
-                this.handle1.on({
-                    focus: $.proxy(showTooltip, this),
-                    blur: $.proxy(hideTooltip, this)
+                slider.handle1.on({
+                    focus: $.proxy(showTooltip, slider),
+                    blur: $.proxy(hideTooltip, slider)
                 });
-                this.handle2.on({
-                    focus: $.proxy(showTooltip, this),
-                    blur: $.proxy(hideTooltip, this)
+                slider.handle2.on({
+                    focus: $.proxy(showTooltip, slider),
+                    blur: $.proxy(hideTooltip, slider)
                 });
             }
         });
@@ -316,6 +317,7 @@
 
 		layout: function(){
 			var positionPercentages;
+            var slider = this;
 
 			if(this.reversed) {
 				positionPercentages = [ 100 - this.percentage[0], this.percentage[1] ];
@@ -339,16 +341,16 @@
 
 			if (this.range) {
                 this.tooltipNames.forEach(function(tooltipName) {
-                    var formater = this.formaters[tooltipName];
-                    var separator = this.tooltip_separators[tooltipName];
-                    this[tooltipName + 'Inner'].text(
-                        formater(this.value[0]) + separator + formater(this.value[1])
+                    var formater = slider.formaters[tooltipName];
+                    var separator = slider.tooltip_separators[tooltipName];
+                    slider[tooltipName + 'Inner'].text(
+                        formater(slider.value[0]) + separator + formater(slider.value[1])
                     );
-                    this[tooltipName + 'Inner_min'].text(
-                        formater(this.value[0])
+                    slider[tooltipName + 'Inner_min'].text(
+                        formater(slider.value[0])
                     );
-                    this[tooltipName + 'Inner_max'].text(
-                        formater(this.value[1])
+                    slider[tooltipName + 'Inner_max'].text(
+                        formater(slider.value[1])
                     );
                 });
                 // TODO: can possibly do in cycle
@@ -362,8 +364,8 @@
 
 			} else {
                 this.tooltipNames.forEach(function(tooltipName) {
-                    this[tooltipName + 'Inner'].text(
-                        this.formaters[tooltipName](this.value[0])
+                    slider[tooltipName + 'Inner'].text(
+                        slider.formaters[tooltipName](slider.value[0])
                     );
                 });
 				this.tooltip[0].style[this.stylePos] = this.size * positionPercentages[0]/100 - (this.orientation === 'vertical' ? this.tooltip.outerHeight()/2 : this.tooltip.outerWidth()/2) +'px';
