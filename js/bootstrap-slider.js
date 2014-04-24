@@ -767,7 +767,7 @@
 		formater: function(value) {
 			return value;
 		},
-        auxFormater: function(value) {
+        aux_formater: function(value) {
             return value;
         }
 	};
