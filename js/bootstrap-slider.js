@@ -308,8 +308,8 @@
             return function() {
                 if (this.inDrag === false && this['alwaysShow'+capitalized_tooltip_name] !== true) {
                     this[tooltip_name].removeClass('in');
-                    this[tooltip_name + 'min'].removeClass('in');
-                    this[tooltip_name + 'max'].removeClass('in');
+                    this[tooltip_name + '_min'].removeClass('in');
+                    this[tooltip_name + '_max'].removeClass('in');
                 }
                 this.over = false;
             };
