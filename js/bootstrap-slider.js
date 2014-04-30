@@ -284,6 +284,7 @@
 	Slider.prototype = {
 		constructor: Slider,
 
+        lastMouseupEvent: null,
 		over: false,
 		inDrag: false,
         tooltipNames: ['tooltip', 'auxTooltip'],
@@ -523,7 +524,12 @@
 			}
 		},
 
-		mouseup: function() {
+        mouseup: function(ev) {
+            if (ev === this.lastMouseupEvent) {
+                return false;
+            } else {
+                this.lastMouseupEvent = ev;
+            }
 			if(!this.isEnabled()) {
 				return false;
 			}
