@@ -342,8 +342,12 @@
 
 			if (this.range) {
                 this.tooltipNames.forEach(function(tooltipName) {
-                    var formater = slider.formaters[tooltipName];
-                    var separator = slider.tooltip_separators[tooltipName];
+                    var formater = slider.formaters[tooltipName],
+                        separator = slider.tooltip_separators[tooltipName],
+                        tooltip = slider[tooltipName],
+                        tooltip_min = slider[tooltipName + '_min'],
+                        tooltip_max = slider[tooltipName + '_max'];
+
                     slider[tooltipName + 'Inner'].text(
                         formater(slider.value[0]) + separator + formater(slider.value[1])
                     );
@@ -353,24 +357,21 @@
                     slider[tooltipName + 'Inner_max'].text(
                         formater(slider.value[1])
                     );
+
+                    tooltip[0].style[slider.stylePos] = slider.size * (positionPercentages[0] + (positionPercentages[1] - positionPercentages[0])/2)/100 - (slider.orientation === 'vertical' ? tooltip.outerHeight()/2 : tooltip.outerWidth()/2) +'px';
+                    tooltip_min[0].style[slider.stylePos] = slider.size * ((positionPercentages[0])/100) - (slider.orientation === 'vertical' ? tooltip_min.outerHeight()/2 : tooltip_min.outerWidth()/2) +'px';
+                    tooltip_max[0].style[slider.stylePos] = slider.size * ((positionPercentages[1])/100) - (slider.orientation === 'vertical' ? tooltip_max.outerHeight()/2 : tooltip_max.outerWidth()/2) +'px';
                 });
-                // TODO: can possibly do in cycle
-				this.tooltip[0].style[this.stylePos] = this.size * (positionPercentages[0] + (positionPercentages[1] - positionPercentages[0])/2)/100 - (this.orientation === 'vertical' ? this.tooltip.outerHeight()/2 : this.tooltip.outerWidth()/2) +'px';
-				this.tooltip_min[0].style[this.stylePos] = this.size * ( (positionPercentages[0])/100) - (this.orientation === 'vertical' ? this.tooltip_min.outerHeight()/2 : this.tooltip_min.outerWidth()/2) +'px';
-				this.tooltip_max[0].style[this.stylePos] = this.size * ( (positionPercentages[1])/100) - (this.orientation === 'vertical' ? this.tooltip_max.outerHeight()/2 : this.tooltip_max.outerWidth()/2) +'px';
-
-                this.auxTooltip[0].style[this.stylePos] = this.size * (positionPercentages[0] + (positionPercentages[1] - positionPercentages[0])/2)/100 - (this.orientation === 'vertical' ? this.auxTooltip.outerHeight()/2 : this.auxTooltip.outerWidth()/2) +'px';
-				this.auxTooltip_min[0].style[this.stylePos] = this.size * ( (positionPercentages[0])/100) - (this.orientation === 'vertical' ? this.auxTooltip_min.outerHeight()/2 : this.auxTooltip_min.outerWidth()/2) +'px';
-				this.auxTooltip_max[0].style[this.stylePos] = this.size * ( (positionPercentages[1])/100) - (this.orientation === 'vertical' ? this.auxTooltip_max.outerHeight()/2 : this.auxTooltip_max.outerWidth()/2) +'px';
-
 			} else {
                 this.tooltipNames.forEach(function(tooltipName) {
-                    slider[tooltipName + 'Inner'].text(
-                        slider.formaters[tooltipName](slider.value[0])
+                    var formater = slider.formaters[tooltipName],
+                        tooltip = slider[tooltipName],
+                        tooltipInner = slider[tooltipName + 'Inner'];
+                    tooltipInner.text(
+                        formater(slider.value[0])
                     );
+                    tooltip.style[slider.stylePos] = slider.size * positionPercentages[0]/100 - (slider.orientation === 'vertical' ? tooltip.outerHeight()/2 : tooltip.outerWidth()/2) +'px';
                 });
-				this.tooltip[0].style[this.stylePos] = this.size * positionPercentages[0]/100 - (this.orientation === 'vertical' ? this.tooltip.outerHeight()/2 : this.tooltip.outerWidth()/2) +'px';
-				this.auxTooltip[0].style[this.stylePos] = this.size * positionPercentages[0]/100 - (this.orientation === 'vertical' ? this.auxTooltip.outerHeight()/2 : this.auxTooltip.outerWidth()/2) +'px';
 			}
 		},
 
