@@ -370,7 +370,7 @@
                     tooltipInner.text(
                         formater(slider.value[0])
                     );
-                    tooltip.style[slider.stylePos] = slider.size * positionPercentages[0]/100 - (slider.orientation === 'vertical' ? tooltip.outerHeight()/2 : tooltip.outerWidth()/2) +'px';
+                    tooltip[0].style[slider.stylePos] = slider.size * positionPercentages[0]/100 - (slider.orientation === 'vertical' ? tooltip.outerHeight()/2 : tooltip.outerWidth()/2) +'px';
                 });
 			}
 		},
