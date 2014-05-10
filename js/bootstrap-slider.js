@@ -18,7 +18,7 @@
  * ========================================================= */
  
 (function( $ ) {
-
+    var eachTooltipElement = '$min,$max,$main'.split(',').forEach;
 	var ErrorMsgs = {
 		formatInvalidInputErrorMsg : function(input) {
 			return "Invalid input value '" + input + "' passed in";
@@ -26,7 +26,42 @@
 		callingContextNotSliderInstance : "Calling context element does not have instance of Slider bound to it. Check your code to make sure the JQuery object returned from the call to the slider() initializer is calling the method"
 	};
 
-	var Slider = function(element, options) {
+    var TooltipPositioners = {
+        main: {
+            horizontal: {
+                className: 'top',
+                offsetProp: 'top',
+                offset: function($elem) {
+                    return -$elem.outerHeight() - 14 + 'px';
+                }
+            },
+            vertical: {
+                className: 'right',
+                offsetProp: 'left',
+                offset: function() {
+                    return '0px';
+                }
+            }
+        },
+        aux: {
+            horizontal: {
+                className: 'bottom',
+                offsetProp: 'top',
+                offset: function($elem) {
+                    return $elem.outerHeight() - 4 + 'px';
+                }
+            },
+            vertical: {
+                className: 'left',
+                offsetProp: 'right',
+                offset: function() {
+                    return '0px';
+                }
+            }
+        }
+    };
+
+    var Slider = function(element, options) {
         var slider = this;
 		var el = this.element = $(element).hide();
 		var origWidth =  $(element)[0].style.width;
@@ -45,15 +80,42 @@
 									'<div class="slider-handle"></div>'+
 									'<div class="slider-handle"></div>'+
 								'</div>'+
-								'<div id="tooltip" class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
-								'<div id="tooltip_min" class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
-								'<div id="tooltip_max" class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
-								'<div id="aux_tooltip" class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
-								'<div id="aux_tooltip_min" class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
-								'<div id="aux_tooltip_max" class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
 							'</div>')
 								.insertBefore(this.element)
 								.append(this.element);
+            if (options.tooltip) {
+                // old tooltip settings API used
+                [
+                    ['main_tooltip', 'tooltip'],
+                    ['main_tooltip_formater', 'formater'],
+                    ['main_tooltip_split', 'tooltip_split'],
+                    ['main_tooltip_separator', 'tooltip_separator']
+                ].forEach(function (newOld) {
+                    options[newOld[0]] = options[newOld[1]] || options[newOld[0]];
+                });
+            }
+            var oldMainMode;
+            if (oldMainMode = slider.element.data('slider-tooltip')) {
+                options.main_tooltip = oldMainMode;
+            }
+            this.tooltipNames.forEach(function(tooltipName) {
+                var tooltip = slider.tooltips[tooltipName] = {},
+                    markup = '<div class="tooltip tooltip-' + tooltipName + '"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
+                             '<div class="tooltip tooltip-' + tooltipName + '-min"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'+
+                             '<div class="tooltip tooltip-' + tooltipName + '-max"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>';
+                slider.picker.append(markup);
+                tooltip.$main = slider.picker.find('.tooltip-' + tooltipName);
+                tooltip.$min = slider.picker.find('.tooltip-' + tooltipName + '-min');
+                tooltip.$max = slider.picker.find('.tooltip-' + tooltipName + '-max');
+                tooltip.positioner = TooltipPositioners[tooltipName];
+                tooltip.formatter = options[tooltipName + '_tooltip_formater'];
+                tooltip.separator = options[tooltipName + '_tooltip_separator'];
+                tooltip.shouldSplit = options[tooltipName + '_tooltip_split'];
+                tooltip.show = slider.tooltipShowCallback(tooltip);
+                tooltip.hide = slider.tooltipHideCallback(tooltip);
+                tooltip.mode =
+                    slider.element.data(options['slider-' + tooltipName + '-tooltip']) || options[tooltipName + '_tooltip'];
+            });
 		}
 
 		this.id = this.element.data('slider-id')||options.id;
@@ -65,38 +127,14 @@
 			this.touchCapable = true;
 		}
 
-		var tooltipOptions = {
-            'tooltip': this.element.data('slider-tooltip') || options.tooltip,
-            'auxTooltip': this.element.data('slider-aux-tooltip')||options.aux_tooltip
-
-        };
-
-		this.tooltip = this.picker.find('#tooltip');
-		this.tooltipInner = this.tooltip.find('div.tooltip-inner');
-
-		this.tooltip_min = this.picker.find('#tooltip_min');
-		this.tooltipInner_min = this.tooltip_min.find('div.tooltip-inner');
-
-		this.tooltip_max = this.picker.find('#tooltip_max');
-		this.tooltipInner_max= this.tooltip_max.find('div.tooltip-inner');
-
-		this.auxTooltip = this.picker.find('#aux_tooltip');
-		this.auxTooltipInner = this.auxTooltip.find('div.tooltip-inner');
-
-		this.auxTooltip_min = this.picker.find('#aux_tooltip_min');
-		this.auxTooltipInner_min = this.auxTooltip_min.find('div.tooltip-inner');
-
-		this.auxTooltip_max = this.picker.find('#aux_tooltip_max');
-		this.auxTooltipInner_max= this.auxTooltip_max.find('div.tooltip-inner');
-
 		if (updateSlider === true) {
 			// Reset classes
 			this.picker.removeClass('slider-horizontal');
 			this.picker.removeClass('slider-vertical');
-            this.tooltipNames.forEach(function(tooltipName) {
-                slider[tooltipName].removeClass('hide');
-                slider[tooltipName + '_min'].removeClass('hide');
-                slider[tooltipName + '_max'].removeClass('hide');
+            this.tooltips.forEach(function(tooltip) {
+                eachTooltipElement(function(elemName) {
+                    tooltip[elemName].removeClass('hide');
+                });
             });
 		}
 
@@ -107,14 +145,8 @@
 				this.stylePos = 'top';
 				this.mousePos = 'pageY';
 				this.sizePos = 'offsetHeight';
-				this.tooltip.addClass('right')[0].style.left = '100%';
-				this.tooltip_min.addClass('right')[0].style.left = '100%';
-				this.tooltip_max.addClass('right')[0].style.left = '100%';
-				this.auxTooltip.addClass('left')[0].style.left = '100%';
-				this.auxTooltip_min.addClass('left')[0].style.right = '100%';
-				this.auxTooltip_max.addClass('left')[0].style.right = '100%';
 				break;
-			default:
+            default:
 				this.picker
 					.addClass('slider-horizontal')
 					.css('width', origWidth);
@@ -122,14 +154,16 @@
 				this.stylePos = 'left';
 				this.mousePos = 'pageX';
 				this.sizePos = 'offsetWidth';
-				this.tooltip.addClass('top')[0].style.top = -this.tooltip.outerHeight() - 14 + 'px';
-				this.tooltip_min.addClass('top')[0].style.top = -this.tooltip_min.outerHeight() - 14 + 'px';
-				this.tooltip_max.addClass('top')[0].style.top = -this.tooltip_max.outerHeight() - 14 + 'px';
-				this.auxTooltip.addClass('bottom')[0].style.top = this.picker.outerHeight() - 4 + 'px';
-				this.auxTooltip_min.addClass('top')[0].style.top = this.picker.outerHeight() - 4 + 'px';
-				this.auxTooltip_max.addClass('top')[0].style.top = this.picker.outerHeight() - 4 + 'px';
 				break;
 		}
+        this.tooltips.forEach(function(tooltip) {
+            var positioner = tooltip.positioner[this.orientation]
+            eachTooltipElement(function($elemName) {
+                var $elem = tooltip[$elemName];
+                $elem.addClass(positioner.className)[0].style[positioner.offsetProp] = positioner.offset($elem);
+            });
+        });
+
 
 		var self = this;
 		$.each(['min', 'max', 'step', 'value'], function(i, attr) {
@@ -209,19 +243,6 @@
 		this.offset = this.picker.offset();
 		this.size = this.picker[0][this.sizePos];
 
-		this.formaters = {
-            tooltip: options.formater,
-            auxTooltip: options.aux_formater
-        };
-		this.tooltip_separators = {
-            tooltip: options.tooltip_separator,
-            auxTooltip: options.aux_tooltip_separator
-        };
-        this.tooltip_splits = {
-            tooltip: options.tooltip_split,
-            auxTooltip: options.aux_tooltip_split
-        };
-
         this.reversed = this.element.data('slider-reversed')||options.reversed;
 
 		this.layout();
@@ -246,17 +267,15 @@
 			});
 		}
 
-        this.tooltipNames.forEach(function(tooltipName) {
-            if(tooltipOptions[tooltipName] === 'hide') {
-                slider[tooltipName].addClass('hide');
-                slider[tooltipName + '_min'].addClass('hide');
-                slider[tooltipName + '_max'].addClass('hide');
-            } else if(tooltipOptions[tooltipName] === 'always') {
-                slider.tooltipShowCallback(tooltipName).call(slider);
-                slider['alwaysShow' + slider.capitalizeFirstLetter(tooltipName)] = true;
+        this.tooltips.forEach(function(tooltip) {
+            if (tooltip.mode === 'hide') {
+                eachTooltipElement(function(elemName) {
+                    tooltip[elemName].addClass('hide');
+                });
+            } else if (tooltip.mode === 'always') {
+                tooltip.show.call(slider);
             } else {
-                var showTooltip = slider.tooltipShowCallback(tooltipName);
-                var hideTooltip = slider.tooltipHideCallback(tooltipName);
+                var showTooltip = tooltip.show, hideTooltip = tooltip.hide;
                 slider.picker.on({
                     mouseenter: $.proxy(showTooltip, slider),
                     mouseleave: $.proxy(hideTooltip, slider)
@@ -287,30 +306,25 @@
         lastMouseupEvent: null,
 		over: false,
 		inDrag: false,
-        tooltipNames: ['tooltip', 'auxTooltip'],
-        capitalizeFirstLetter: function(string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        },
-        // tooltip_name in {'tooltip', 'auxTooltip}
-		tooltipShowCallback: function(tooltip_name) {
+        tooltipNames: ['main', 'aux'],
+        tooltips: {},
+		tooltipShowCallback: function(tooltip) {
             return function() {
-                if (this.tooltip_splits[tooltip_name] === false){
-                    this[tooltip_name].addClass('in');
+                if (tooltip.shouldSplit === false){
+                    tooltip.$main.addClass('in');
                 } else {
-                    this[tooltip_name + '_min'].addClass('in');
-                    this[tooltip_name + '_max'].addClass('in');
+                    tooltip.$min.addClass('in');
+                    tooltip.$max.addClass('in');
                 }
                 this.over = true;
             };
         },
-        // tooltip_name in {'tooltip', 'auxTooltip}
-        tooltipHideCallback: function(tooltip_name) {
-            var capitalized_tooltip_name = this.capitalizeFirstLetter(tooltip_name);
+        tooltipHideCallback: function(tooltip) {
             return function() {
-                if (this.inDrag === false && this['alwaysShow'+capitalized_tooltip_name] !== true) {
-                    this[tooltip_name].removeClass('in');
-                    this[tooltip_name + '_min'].removeClass('in');
-                    this[tooltip_name + '_max'].removeClass('in');
+                if (this.inDrag === false && tooltip.mode !== 'always') {
+                    eachTooltipElement(function(elemName) {
+                        tooltip[elemName].removeClass('in');
+                    });
                 }
                 this.over = false;
             };
@@ -341,36 +355,27 @@
 			}
 
 			if (this.range) {
-                this.tooltipNames.forEach(function(tooltipName) {
-                    var formater = slider.formaters[tooltipName],
-                        separator = slider.tooltip_separators[tooltipName],
-                        tooltip = slider[tooltipName],
-                        tooltip_min = slider[tooltipName + '_min'],
-                        tooltip_max = slider[tooltipName + '_max'];
-
-                    slider[tooltipName + 'Inner'].text(
-                        formater(slider.value[0]) + separator + formater(slider.value[1])
+                this.tooltips.forEach(function(tooltip) {
+                    tooltip.$main.find('.tooltip-inner').text(
+                        tooltip.formatter(slider.value[0]) + tooltip.separator + tooltip.formatter(slider.value[1])
                     );
-                    slider[tooltipName + 'Inner_min'].text(
-                        formater(slider.value[0])
+                    tooltip.$min.find('.tooltip-inner').text(
+                        tooltip.formatter(slider.value[0])
                     );
-                    slider[tooltipName + 'Inner_max'].text(
-                        formater(slider.value[1])
+                    tooltip.$max.find('.tooltip-inner').text(
+                        tooltip.formatter(slider.value[1])
                     );
 
-                    tooltip[0].style[slider.stylePos] = slider.size * (positionPercentages[0] + (positionPercentages[1] - positionPercentages[0])/2)/100 - (slider.orientation === 'vertical' ? tooltip.outerHeight()/2 : tooltip.outerWidth()/2) +'px';
-                    tooltip_min[0].style[slider.stylePos] = slider.size * ((positionPercentages[0])/100) - (slider.orientation === 'vertical' ? tooltip_min.outerHeight()/2 : tooltip_min.outerWidth()/2) +'px';
-                    tooltip_max[0].style[slider.stylePos] = slider.size * ((positionPercentages[1])/100) - (slider.orientation === 'vertical' ? tooltip_max.outerHeight()/2 : tooltip_max.outerWidth()/2) +'px';
+                    tooltip.$main[0].style[slider.stylePos] = slider.size * (positionPercentages[0] + (positionPercentages[1] - positionPercentages[0])/2)/100 - (slider.orientation === 'vertical' ? tooltip.$main.outerHeight()/2 : tooltip.$main.outerWidth()/2) +'px';
+                    tooltip.$min[0].style[slider.stylePos] = slider.size * ((positionPercentages[0])/100) - (slider.orientation === 'vertical' ? tooltip.$min.outerHeight()/2 : tooltip.$min.outerWidth()/2) +'px';
+                    tooltip.$max[0].style[slider.stylePos] = slider.size * ((positionPercentages[1])/100) - (slider.orientation === 'vertical' ? tooltip.$max.outerHeight()/2 : tooltip.$max.outerWidth()/2) +'px';
                 });
 			} else {
-                this.tooltipNames.forEach(function(tooltipName) {
-                    var formater = slider.formaters[tooltipName],
-                        tooltip = slider[tooltipName],
-                        tooltipInner = slider[tooltipName + 'Inner'];
-                    tooltipInner.text(
-                        formater(slider.value[0])
+                this.tooltips.forEach(function(tooltip) {
+                    tooltip.$main.find('.tooltip-inner').text(
+                        tooltip.formatter(slider.value[0])
                     );
-                    tooltip[0].style[slider.stylePos] = slider.size * positionPercentages[0]/100 - (slider.orientation === 'vertical' ? tooltip.outerHeight()/2 : tooltip.outerWidth()/2) +'px';
+                    tooltip.$main[0].style[slider.stylePos] = slider.size * positionPercentages[0]/100 - (slider.orientation === 'vertical' ? tooltip.$main.outerHeight()/2 : tooltip.$main.outerWidth()/2) +'px';
                 });
 			}
 		},
@@ -762,19 +767,19 @@
 		value: 5,
 		range: false,
 		selection: 'before',
-		tooltip: 'show',
-        tooltip_separator: ':',
-        tooltip_split: false,
+		main_tooltip: 'show',
+        main_tooltip_separator: ':',
+        main_tooltip_split: false,
         aux_tooltip: 'hide',
         aux_tooltip_separator: ':',
         aux_tooltip_split: false,
 		handle: 'round',
 		reversed : false,
 		enabled: true,
-		formater: function(value) {
+		main_tooltip_formater: function(value) {
 			return value;
 		},
-        aux_formater: function(value) {
+        aux_tooltip_formater: function(value) {
             return value;
         }
 	};
