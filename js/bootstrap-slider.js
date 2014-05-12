@@ -106,7 +106,7 @@
 		}
 
 		var self = this;
-		$.each(['min', 'max', 'step', 'value'], function(i, attr) {
+		$.each(['min', 'max', 'step', 'precision', 'value'], function(i, attr) {
 			if (typeof el.data('slider-' + attr) !== 'undefined') {
 				self[attr] = el.data('slider-' + attr);
 			} else if (typeof options[attr] !== 'undefined') {
@@ -505,9 +505,11 @@
 				val = [this.min,this.max];
                 if (this.percentage[0] !== 0){
                     val[0] = (Math.max(this.min, this.min + Math.round((this.diff * this.percentage[0]/100)/this.step)*this.step));
+                    val[0] = this.applyPrecision(val[0]);
                 }
                 if (this.percentage[1] !== 100){
                     val[1] = (Math.min(this.max, this.min + Math.round((this.diff * this.percentage[1]/100)/this.step)*this.step));
+                    val[1] = this.applyPrecision(val[1]);
                 }
 				this.value = val;
 			} else {
@@ -519,9 +521,28 @@
 					val = this.max;
 				}
 				val = parseFloat(val);
+				val = this.applyPrecision(val);
 				this.value = [val, this.value[1]];
 			}
 			return val;
+		},
+		applyPrecision: function(val) {
+			var precision = this.precision || this.getNumDigitsAfterDecimalPlace(this.step);
+			return this.applyToFixedAndParseFloat(val, precision);
+		},
+		/*
+			Credits to Mike Samuel for the following method!
+			Source: http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
+		*/
+		getNumDigitsAfterDecimalPlace: function(num) {
+			var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+			if (!match) { return 0; }
+			return Math.max(0, (match[1] ? match[1].length : 0) - (match[2] ? +match[2] : 0));
+		},
+
+		applyToFixedAndParseFloat: function(num, toFixedInput) {
+			var truncatedNum = num.toFixed(toFixedInput);
+			return parseFloat(truncatedNum);
 		},
 
 		getPercentage: function(ev) {
@@ -541,7 +562,6 @@
 		},
 
 		setValue: function(val) {
-
 			if (!val) {
 				val = 0;
 			}
@@ -549,9 +569,13 @@
 			this.value = this.validateInputValue(val);
 
 			if (this.range) {
+				this.value[0] = this.applyPrecision(this.value[0]);
+				this.value[1] = this.applyPrecision(this.value[1]); 
+
 				this.value[0] = Math.max(this.min, Math.min(this.max, this.value[0]));
 				this.value[1] = Math.max(this.min, Math.min(this.max, this.value[1]));
 			} else {
+				this.value = this.applyPrecision(this.value);
 				this.value = [ Math.max(this.min, Math.min(this.max, this.value))];
 				this.handle2.addClass('hide');
 				if (this.selection === 'after') {
