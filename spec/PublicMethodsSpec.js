@@ -54,6 +54,17 @@ describe("Public Method Tests", function() {
       expect(true).toBeTruthy();
     });
 
+    describe("reads and sets the 'precision' option properly", function() {
+      testSlider = $("#testSlider1").slider({
+        precision : 2
+      });
+
+      testSlider.slider('setValue', 8.115);
+
+      var sliderValue = testSlider.slider('getValue');
+      expect(sliderValue).toBe(8.12);
+    });
+
     it("reads and sets the 'orientation' option properly", function() {
       var orientationVal = "vertical";
 

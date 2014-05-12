@@ -713,6 +713,7 @@
 		min: 0,
 		max: 10,
 		step: 1,
+		precision: 0,
 		orientation: 'horizontal',
 		value: 5,
 		range: false,
