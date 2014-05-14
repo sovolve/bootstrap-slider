@@ -18,6 +18,7 @@
  * ========================================================= */
 
 (function( $ ) {
+    var START_SLIDING_SELECTOR = '.slider,.slider-track,.slider-track > *'
     var ErrorMsgs = {
         formatInvalidInputErrorMsg : function(input) {
             return "Invalid input value '" + input + "' passed in";
@@ -261,13 +262,9 @@
 
         if (this.touchCapable) {
             // Touch: Bind touch events:
-            this.picker.on({
-                touchstart: $.proxy(this.mousedown, this)
-            });
+            this.picker.on('touchstart', START_SLIDING_SELECTOR, $.proxy(this.mousedown, this));
         } else {
-            this.picker.on({
-                mousedown: $.proxy(this.mousedown, this)
-            });
+            this.picker.on('mousedown', START_SLIDING_SELECTOR, $.proxy(this.mousedown, this));
         }
 
         this.tooltips.forEach(function(tooltip) {
@@ -383,6 +380,9 @@
         mousedown: function(ev) {
             if(!this.isEnabled()) {
                 return false;
+            }
+            if(!$(ev.target).is(START_SLIDING_SELECTOR)) {
+                return;
             }
             // Touch: Get the original event:
             if (this.touchCapable && ev.type === 'touchstart') {
