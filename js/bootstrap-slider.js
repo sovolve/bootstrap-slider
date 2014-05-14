@@ -160,7 +160,7 @@
                 break;
         }
         this.tooltips.forEach(function(tooltip) {
-            var positioner = tooltip.positioner[slider.orientation]
+            var positioner = tooltip.positioner[slider.orientation];
             '$min,$max,$main'.split(',').forEach(function($elemName) {
                 var $elem = tooltip[$elemName];
                 $elem.addClass(positioner.className)[0].style[positioner.offsetProp] = positioner.offset($elem);
